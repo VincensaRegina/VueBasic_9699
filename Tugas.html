@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+
+    <script src="vue.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
+        integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+        integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js"
+        integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s"
+        crossorigin="anonymous"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;600&family=Playfair+Display:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+
+    <style>
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            display: inline-block;
+
+        }
+
+        .btnAdd {
+            float: right;
+            margin-top: 10px;
+            width: 20%;
+        }
+
+        .rectangle {
+            height: fit-content;
+            width: 30vw;
+            background-color: white;
+            box-shadow: 0 4px 8px 0 rgba(81, 81, 81, 0.2), 0 6px 20px 0 rgba(81, 81, 81, 0.2);
+            border-radius: 10px;
+            word-wrap: break-word;
+            display: block;
+            padding: 10px;
+            margin-bottom: 30px;
+        }
+
+        .priority {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            font-size: 1em;
+        }
+
+        .title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 1.5em;
+            display: inline-block;
+        }
+
+        .note {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 300;
+            font-size: 1em;
+        }
+
+        footer {
+            position:fixed;     
+            left: 0;
+            bottom: 0;
+            padding-top: 10px;
+            width: 100%;
+            background-color: #0275d8;
+            color: white;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div id="app">
+            <br>
+            <h1>To-Do List</h1>
+            <button type="button" class="btn btn-outline-primary btnAdd" data-toggle="modal"
+                data-target="#modalAddToDo">Add a new to-do</button>
+            <hr>
+
+            <div class="modal" tabindex="-1" role="dialog" id="modalAddToDo">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Add a new to-do</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form>
+                                <div class="form-group">
+                                    <label for="priorityForm">Priority</label>
+                                    <select class="form-control" id="priorityForm" v-model="newPriority" required>
+                                      <option v-for="(priority, index) in priorities" :key="index" v-bind:value="{priorityText: priority}">{{priority}}</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="titleForm">To-Do Title</label>
+                                    <input type="text" class="form-control" id="titleForm" v-model="newTitle" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="noteForm">Note (Optional)</label>
+                                    <textarea class="form-control" id="noteForm" rows="3" v-model="newNote"></textarea>
+                                </div>
+                                <p v-if="errors.length">
+                                    <b>Error(s) found:</b>
+                                    <ul>
+                                      <li v-for="error in errors">{{ error }}</li>
+                                    </ul>
+                                  </p>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary" @click="reset()">Reset</button>
+                                    <button type="button"class="btn btn-secondary" @click="addNewTodo()">Add</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rectangle" v-for="(todo, index) in todos" :key="todo.id">
+                <div class="priority">
+                    <span v-if="todo.priority == 'Penting'" style="color:red"> {{todo.priority}} </span>
+                    <span v-if="todo.priority == 'Biasa'" style="color:blue"> {{todo.priority}} </span>
+                    <span v-if="todo.priority == 'Tidak Penting'" style="color:green"> {{todo.priority}} </span>
+                </div> 
+                <div class="title"> {{todo.title}}</div>  
+                <span v-on:click="deleteTodo(index)"><i class="far fa-trash-alt fa-lg" style="color:red; float: right; margin-top: 10px;"></i> </span>
+                <div class="note"> {{todo.note}}</div>
+            </div>
+            <br>
+            <br>
+
+            <footer>
+                <p> {{vincensaregina.nama}} | {{vincensaregina.npm}} | {{vincensaregina.kelas}}</p>
+            </footer>
+
+        </div>
+    </div>
+</body>
+
+<script>
+  
+    new Vue({
+        el: "#app",
+        data: {
+            priorities: ['Penting', 'Biasa', 'Tidak Penting'],
+            newTitle: null,
+            newNote: null,
+            newPriority: null,
+            errors:[],
+            todos: [
+                {
+                    id: 1,
+                    priority: 'Penting',
+                    title: 'Bersih-bersih',
+                    note: 'Cuci piring, sapu lantai, pel lantai'
+                },
+                {
+                    id: 2,
+                    priority: 'Biasa',
+                    title: 'Ngerjain tugas matkul A',
+                    note: 'Tugas halaman 10-100'
+                },
+            ],
+            nextId: 3,
+            vincensaregina: {
+                nama: 'Vincensa Regina Indarto',
+                npm: 180709699,
+                kelas: 'D',
+            },
+        },
+        methods: {
+            reset: function() {
+                this.newTitle = null,
+                this.newNote = null,
+                this.newPriority = null,
+                this.errors = []  
+            },
+            addNewTodo: function (){
+                if (this.newPriority && this.newTitle) {
+                    this.todos.push({
+                        id: this.nextId++,
+                        priority: this.newPriority.priorityText, 
+                        title: this.newTitle,
+                        note: this.newNote,
+                    })
+                    this.reset()
+                } else {
+                    this.errors = [];
+
+                    if (!this.newPriority) {
+                    this.errors.push('Priority is not selected.');
+                    }
+                    if (!this.newTitle) {
+                    this.errors.push('Title field is empty.');
+                    }
+                }        
+            },
+            deleteTodo: function(index) {
+                var r = confirm("Delete this to-do?");
+                if (r == true) {
+                    this.todos.splice(index, 1);
+                } 
+            }
+        }
+    });
+</script>
+
+</html>
